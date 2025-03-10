@@ -73,8 +73,7 @@ if __name__ == "__main__":
         ("Strategy 1", 0.2, 0.4, 0.4),
         ("Strategy 2", 0.1, 0.5, 0.4),
         ("Strategy 3", 0.3, 0.3, 0.4),
-        ("Strategy 4", 0.4, 0.3, 0.3),
-        ("Strategy 5", 0.25, 0.35, 0.4),
+
     ]
     
     plt.figure(figsize=(12, 6))
@@ -86,8 +85,8 @@ if __name__ == "__main__":
             eth_csv="ETH_data.csv", 
             w_cash=w_cash, w_btc=w_btc, w_eth=w_eth,
             initial_capital=1000.0,
-            start_date="2021-02-18",
-            end_date="2021-07-18"
+            start_date="2020-01-01",
+            end_date="2021-11-26"
         )
         plt.plot(df_res["timestamp"], df_res["portfolio_value"], label=name)
     
