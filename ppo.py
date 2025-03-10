@@ -192,7 +192,7 @@ def main(args):
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
-    print("------------ REACHED ENVIROMENT SETUP ------------")
+    # ------------ ENVIROMENT SETUP ------------
 
     # env setup
     envs = gym.vector.SyncVectorEnv(
@@ -204,7 +204,7 @@ def main(args):
     agent = Agent(envs).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
-    print("------------ FINISHED ENVIRONMENT SETUP ------------")
+    # ------------ END OF ENVIRONMENT SETUP ------------
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -349,3 +349,7 @@ def main(args):
 
     envs.close()
     writer.close()
+
+    # ---- SAVE THE MODEL HERE ----
+    torch.save(agent.state_dict(), "models/ppo_agent.pt")
+    print("Model saved to ppo_agent.pt")
