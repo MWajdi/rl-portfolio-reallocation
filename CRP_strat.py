@@ -70,9 +70,11 @@ def crp_backtest(btc_csv, eth_csv,
 
 if __name__ == "__main__":
     strategies = [
-        ("Strategy 1", 0.2, 0.4, 0.4),
-
-
+        ("Strategy 1 (Cash: 20%, BTC: 40%, ETH: 40%)", 0.2, 0.4, 0.4),
+        ("Strategy 2 (Cash: 30%, BTC: 55%, ETH: 15%)", 0.3, 0.55, 0.15),
+        ("Strategy 3 (Cash: 5%, BTC: 10%, ETH: 85%)", 0.05, 0.10, 0.85),
+        ("Strategy 4 (Cash: 50%, BTC: 10%, ETH: 40%)", 0.5, 0.10, 0.40),
+        ("Strategy 5 (Cash: 0%, BTC: 95%, ETH: 5%)", 0.0, 0.95, 0.05),
     ]
     
     plt.figure(figsize=(12, 6))
@@ -85,7 +87,7 @@ if __name__ == "__main__":
             w_cash=w_cash, w_btc=w_btc, w_eth=w_eth,
             initial_capital=1000.0,
             start_date="2020-01-01",
-            end_date="2021-01-26"
+            end_date="2021-11-01"
         )
         plt.plot(df_res["timestamp"], df_res["portfolio_value"], label=name)
     
