@@ -15,7 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import portfolio_env
 from portfolio_env import make_wrapped_env
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -53,8 +53,10 @@ class Args:
     """weights for Sharpe ratio and portfolio return in reward calculation"""
     closing_prices: np.ndarray = np.array([])  #  Default is empty array
     """historical closing prices of the assets"""
-    prediction_model: Optional[object] = None  #  Allows external ML models
+    prediction_models: Optional[List[nn.Module]] = None  #  Allows external ML models
     """prediction model for the asset prices"""
+    prediction_method: str = "directional"
+    """method to predict the asset prices, can be set to "directional" or "regression" """
 
     # Algorithm specific arguments
     env_id: str = "PortfolioEnv-v0"
