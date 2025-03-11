@@ -45,4 +45,4 @@ def create_train_json(input_csv, output_json, window_size=100, max_samples=10000
     print(f"Saved {len(data)} samples to {output_json}")
 
 
-create_train_json("BTC_data.csv", "BTC_train_data.json", window_size=100, max_samples=45000)
+create_train_json("BTC_data.csv", "BTC_train_data_new.json", window_size=100, max_samples=195000)
