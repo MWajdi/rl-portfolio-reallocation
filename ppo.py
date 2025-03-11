@@ -133,8 +133,8 @@ class Agent(nn.Module):
     def __init__(self, envs):
         super().__init__()
 
-        print(f"🔍 Observation space: {envs.single_observation_space}")
-        print(f"🔍 Observation space shape: {envs.single_observation_space.shape}")
+        # print(f"🔍 Observation space: {envs.single_observation_space}")
+        # print(f"🔍 Observation space shape: {envs.single_observation_space.shape}")
 
 
         self.critic = nn.Sequential(
