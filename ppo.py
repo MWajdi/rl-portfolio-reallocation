@@ -114,7 +114,9 @@ def make_env(env_id, args):
                        reward_method=args.reward_method,
                        g1=args.g1,
                        g2=args.g2,
-                       prediction_model=args.prediction_model)
+                       prediction_models=args.prediction_models,
+                       prediction_method=args.prediction_method
+                       )
         env = gym.wrappers.RecordEpisodeStatistics(env)  
         return env
     return thunk
@@ -353,5 +355,5 @@ def main(args):
     writer.close()
 
     # ---- SAVE THE MODEL HERE ----
-    torch.save(agent.state_dict(), "models/ppo_agent.pt")
-    print("Model saved to ppo_agent.pt")
+    torch.save(agent.state_dict(), f"models/ppo_agent_{args.exp_name}.pt")
+    print(f"Model saved to ppo_agent_{args.exp_name}.pt")

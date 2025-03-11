@@ -24,7 +24,7 @@ class PortfolioEnv(gym.Env):
         with torch.no_grad():
             prediction = model(x_test).squeeze(-1)
             
-        return prediction
+        return prediction.cpu().numpy()
 
 
     def __init__(self, n_assets: int = 1, window_size: int = 1, action_step_size: float = 0.1, 
@@ -52,11 +52,6 @@ class PortfolioEnv(gym.Env):
             model.to(self.device) if model is not None else None 
             for model in prediction_models
         ] if prediction_models is not None else [None] * self.n_assets
-
-
-        # Calculate prediction for each asset at the current time step
-        price_window = self.closing_prices[self.time_step - self.window_size : self.time_step]
-        self.next_step_predictions = [self._get_prediction(i, price_window) for i in range(self.n_assets)]
 
         # ----- Reward parameters ------
         self.reward_method = reward_method # Reward method, can be set to "portfolio_value" or "sharpe_ratio"
@@ -98,13 +93,18 @@ class PortfolioEnv(gym.Env):
         # Discrete action space: each action corresponds to an index in self.all_weights
         self.action_space = gym.spaces.Discrete(len(self.all_weights))
     
+    def get_predictions(self):
+        """Get prediction."""
+        price_window = self.closing_prices[self.time_step - self.window_size : self.time_step]
+        return [self._get_prediction(i, price_window[:,i]) for i in range(self.n_assets)]
+
     def _get_obs(self):
         """Get observation."""
         price_window = self.closing_prices[self.time_step - self.window_size : self.time_step]
         return {
             "current_portfolio": self.portfolio,
             "price_history": price_window,
-            "movement_prediction": [self._get_prediction(i, price_window) for i in range(self.n_assets)]
+            "movement_prediction": self.get_predictions()
         }
     
     def _get_info(self):
@@ -184,7 +184,8 @@ class PortfolioEnv(gym.Env):
         terminated = (self.time_step == self.initial_time_step + self.episode_length - 1)
 
         if terminated:
-            self._graph_returns()
+            # self._graph_returns()
+            pass
 
         # Move to the next time step
         self.time_step += 1
