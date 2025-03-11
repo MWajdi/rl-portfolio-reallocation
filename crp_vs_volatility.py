@@ -137,7 +137,7 @@ btc_data_path = "BTC_data.csv"  # Adjust path after uploading
 data = pd.read_csv(btc_data_path, parse_dates=["timestamp"])
 
 # Define parameters
-window_size = 5000  # One year
+window_size = 75000  # One year
 
 # Run analysis
 crp_performance_vs_start_date(data, window_size)
