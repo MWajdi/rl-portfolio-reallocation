@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 def crp_backtest(btc_csv, eth_csv, 
                  w_cash=0.2, w_btc=0.4, w_eth=0.4, 
@@ -67,12 +68,20 @@ def crp_backtest(btc_csv, eth_csv,
     
     df_result = pd.DataFrame({"timestamp": timestamps, "portfolio_value": portfolio_values})
     return df_result
+def compute_discrete_ratios(result, step=288):
+    
+    ratios = [result[i] / result[i - step] for i in range(step, len(result),step)]
+
+    return ratios
+
+from scipy.stats import gmean
+
+
 
 if __name__ == "__main__":
     strategies = [
         ("Strategy 1", 0.2, 0.4, 0.4),
-        ("Strategy 2", 0.1, 0.5, 0.4),
-        ("Strategy 3", 0.3, 0.3, 0.4),
+
 
     ]
     
@@ -81,15 +90,26 @@ if __name__ == "__main__":
     for name, w_cash, w_btc, w_eth in strategies:
         print(name)
         df_res = crp_backtest(
-            btc_csv="BTC_data.csv", 
-            eth_csv="ETH_data.csv", 
+            btc_csv="binance_datasets/BTC_data.csv", 
+            eth_csv="binance_datasets/ETH_data.csv", 
             w_cash=w_cash, w_btc=w_btc, w_eth=w_eth,
             initial_capital=1000.0,
             start_date="2020-01-01",
             end_date="2021-11-26"
         )
-        plt.plot(df_res["timestamp"], df_res["portfolio_value"], label=name)
+    df_ratios_result = compute_discrete_ratios(np.array(df_res["portfolio_value"]), step=288)
+
+    print( sum(df_ratios_result)/len(df_ratios_result))
+
+
+    # Plot histogram
+    plt.hist(df_ratios_result, bins='auto', edgecolor='black', alpha=0.7)
+    plt.xlabel("Successive 288-Step Portfolio Value Ratios")
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Portfolio Value Ratios")
+    plt.show()
     
+    plt.plot(df_res["timestamp"], df_res["portfolio_value"], label=name)
     plt.xlabel("Time")
     plt.ylabel("Portfolio Value (USD)")
     plt.title("Comparison of Different CRP Strategies")

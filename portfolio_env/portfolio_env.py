@@ -19,12 +19,19 @@ class PortfolioEnv(gym.Env):
     def _get_prediction(self, i, prices):
         """Get prediction."""
         model = self.prediction_models[i]
-        x_test = torch.tensor(prices, dtype=torch.float32, device=self.device)
+        if self.prediction_method=="directional":
+            x_test = torch.tensor(prices.reshape(1, len(prices), 1), dtype=torch.float32, device=self.device)
+        else:
+            x_test = torch.tensor(prices, dtype=torch.float32, device=self.device)
+
+
 
         with torch.no_grad():
-            prediction = model(x_test).squeeze(-1)
-            
-        return prediction.cpu().numpy()
+            prediction = model(x_test).squeeze(-1).cpu().numpy()
+        if self.prediction_method == "directional":
+            prediction = int(prediction[0]>0.5)
+        
+        return prediction
 
 
     def __init__(self, n_assets: int = 1, window_size: int = 1, action_step_size: float = 0.1, 
@@ -95,6 +102,7 @@ class PortfolioEnv(gym.Env):
     
     def get_predictions(self):
         """Get prediction."""
+        
         price_window = self.closing_prices[self.time_step - self.window_size : self.time_step]
         return [self._get_prediction(i, price_window[:,i]) for i in range(self.n_assets)]
 

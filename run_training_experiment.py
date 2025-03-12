@@ -18,18 +18,18 @@ def create_experiment(reward_method):
             "prediction_model_lr": 2 * 1e-5,
 
             "use_existing_prediction_model": True,  
-            "prediction_model_paths": ["models/BTC_01_action_space_step_linear_model.pth", "models/ETH_01_action_space_step_linear_model.pth"],
+            "prediction_model_paths": ["models/btc_1_year_linear_model.pth", "models/eth_1_year_linear_model.pth"],
 
-            "train_rl_model": True,
+            "train_rl_model": False,
 
             # Dataset split
             "train_prop": 0.8,
 
             # Environment settings
             "n_assets": 2,                    
-            "window_size": 288,               
+            "window_size": 10,               
             "action_step_size": 0.25,          
-            "episode_length": 288,            
+            "episode_length": 10,            
             "reward_method": reward_method,  
             "g1": 0.5,                       
             "g2": 0.5,                        
@@ -59,7 +59,7 @@ def create_experiment(reward_method):
         }
 
 experiments = {
-    "portfolio_value": create_experiment("portfolio_value"),
+    "experiment_1_year_test": create_experiment("expirement_1_year_test"),
     "sharpe_ratio": create_experiment("sharpe_ratio")
 }
 
