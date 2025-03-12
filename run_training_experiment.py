@@ -1,18 +1,18 @@
 import pandas as pd
 import numpy as np
 
-experiment_names = ['portfolio_value', 'sharpe_ratio']
+experiment_names = ['mlp_agent','lstm_agent']
 
 # Experiments parameters
 
-def create_experiment(reward_method):
+def create_experiment(model_architecture):
     return {
             # Start and end time for dataset
             "start_time": "2020-01-01 00:00:00",
             "end_time": "2021-01-01 00:00:00",
 
             # Prediction model settings
-            "model_type": "linear_regression",
+            "model_type": "linear_regression", # can be 'linear_regression', 'lstm_regression', 'linear_directional', 'lstm_directional'
             "train_prediction_model": False,
             "prediction_model_epochs": 200,
             "prediction_model_lr": 2 * 1e-5,
@@ -30,14 +30,17 @@ def create_experiment(reward_method):
             "window_size": 288,               
             "action_step_size": 0.25,          
             "episode_length": 288,            
-            "reward_method": reward_method,  
+            "reward_method": "portfolio_value",  
             "g1": 0.5,                       
             "g2": 0.5,                        
-            "prediction_method": "regression",  
+            "prediction_method": "regression",  # can be 'regression' or 'directional'
             "use_prediction_model": True,    
 
+            # Agent settings
+            "model_architecture": model_architecture, # can be 'mlp' or 'lstm'
+
             # PPO Algorithm settings
-            "total_timesteps": 500000,      
+            "total_timesteps": 500000,      # training timesteps
             "rl_model_lr": 1e-3,            
             "num_envs": 8,                  
             "num_steps": 72,                
@@ -59,8 +62,8 @@ def create_experiment(reward_method):
         }
 
 experiments = {
-    "portfolio_value": create_experiment("portfolio_value"),
-    "sharpe_ratio": create_experiment("sharpe_ratio")
+    "mlp_agent": create_experiment("mlp"),
+    "lstm_agent": create_experiment("lstm")
 }
 
 
@@ -266,7 +269,7 @@ for experiment_name, params in experiments.items():
     
     # Load trained PPO agent
     agent = ppo.Agent(envs).to(device)
-    agent.load_state_dict(torch.load(f"models/ppo_agent_{args.exp_name}.pt"))
+    agent.load_state_dict(torch.load(f"models/ppo_agent_{args.exp_name}.pt")) # Load RL model
     agent.eval()  # Set to evaluation mode
 
         
@@ -294,7 +297,7 @@ for experiment_name, params in experiments.items():
         # Randomly select time windows for each environment
         start_times = np.random.randint(
             window_size, test_data.shape[0] - args.episode_length, size=args.num_envs
-        )
+        ) # Change this if you want non random start times for evaluation
         
         # Assign separate time windows to each environment
         test_windows = np.array([
