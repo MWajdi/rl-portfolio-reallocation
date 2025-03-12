@@ -58,6 +58,9 @@ class Args:
     prediction_method: str = "directional"
     """method to predict the asset prices, can be set to "directional" or "regression" """
 
+    # Model architecture arguments
+    model_architecture: str = "mlp"
+
     # Algorithm specific arguments
     env_id: str = "PortfolioEnv-v0"
     """the id of the environment"""
@@ -130,37 +133,87 @@ def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
 
 
 class Agent(nn.Module):
-    def __init__(self, envs):
+    def __init__(self, envs, model_architecture="mlp"):
+        self.model_architecture = model_architecture
         super().__init__()
 
-        # print(f"🔍 Observation space: {envs.single_observation_space}")
-        # print(f"🔍 Observation space shape: {envs.single_observation_space.shape}")
+        if model_architecture == "mlp":
+            self.critic = nn.Sequential(
+                layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
+                nn.Tanh(),
+                layer_init(nn.Linear(64, 64)),
+                nn.Tanh(),
+                layer_init(nn.Linear(64, 1), std=1.0),
+            )
+            self.actor = nn.Sequential(
+                layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
+                nn.Tanh(),
+                layer_init(nn.Linear(64, 64)),
+                nn.Tanh(),
+                layer_init(nn.Linear(64, envs.single_action_space.n), std=0.01),
+            )
 
+        elif model_architecture=="lstm":
+            # LSTM layer to process time-series data
+            hidden_size = 128
+            lstm_layers = 1
+            self.lstm = nn.LSTM(input_size=envs.single_observation_space.shape, hidden_size=hidden_size, num_layers=lstm_layers, batch_first=True)
+            
+            # Critic Network (Value Estimation)
+            self.critic = nn.Sequential(
+                nn.Linear(hidden_size, 128),
+                nn.LeakyReLU(),
+                nn.Linear(128, 128),
+                nn.LeakyReLU(),
+                nn.Linear(128, 1)  # Outputs a single value estimate
+            )
 
-        self.critic = nn.Sequential(
-            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 1), std=1.0),
-        )
-        self.actor = nn.Sequential(
-            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, envs.single_action_space.n), std=0.01),
+            # Actor Network (Policy)
+            self.actor = nn.Sequential(
+                nn.Linear(hidden_size, 128),
+                nn.LeakyReLU(),
+                nn.Linear(128, 128),
+                nn.LeakyReLU(),
+                nn.Linear(128, envs.single_action_space.n),
+                nn.Softmax(dim=-1)  # Ensures action probabilities sum to 1
+            )
+
+            # Initialize hidden state for LSTM
+            self.hidden_state = None
+
+    def reset_hidden_state(self, batch_size=1):
+        """ Reset LSTM hidden states at the beginning of an episode """
+        self.hidden_state = (
+            torch.zeros((1, batch_size, self.lstm.hidden_size)).to(next(self.parameters()).device),
+            torch.zeros((1, batch_size, self.lstm.hidden_size)).to(next(self.parameters()).device),
         )
 
     def get_value(self, x):
-        return self.critic(x)
+        if self.model_architecture == "mlp":
+            return self.critic(x)
+        elif self.model_architecture == "lstm":
+            x, self.hidden_state = self.lstm(x.unsqueeze(1), self.hidden_state)
+            return self.critic(x.squeeze(1))
 
     def get_action_and_value(self, x, action=None):
-        logits = self.actor(x)
-        probs = Categorical(logits=logits)
-        if action is None:
-            action = probs.sample()
-        return action, probs.log_prob(action), probs.entropy(), self.critic(x)
+        if self.model_architecture == "mlp":
+            logits = self.actor(x)
+            probs = Categorical(logits=logits)
+            if action is None:
+                action = probs.sample()
+            return action, probs.log_prob(action), probs.entropy(), self.critic(x)
+        
+        elif self.model_architecture == "lstm":
+            x, self.hidden_state = self.lstm(x.unsqueeze(1), self.hidden_state)
+            x = x.squeeze(1)
+            
+            logits = self.actor(x)
+            probs = Categorical(logits=logits)
+            
+            if action is None:
+                action = probs.sample()
+
+            return action, probs.log_prob(action), probs.entropy(), self.critic(x)
 
 
 # if __name__ == "__main__":
